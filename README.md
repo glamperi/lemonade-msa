@@ -54,7 +54,7 @@
 	oc expose < msa-name >
 
 
-7.  To Test the micro service beverage-vendor which routes to both lemonade-supply and cup-supply, curl this, you should see a son payload:
+7.  To Test the micro service beverage-vendor which routes to both lemonade-supply and cup-supply, curl this, you should see a JSON payload:
 
 	curl http://beverage-vendor-< Openshift-Route >/beverage/large
 
