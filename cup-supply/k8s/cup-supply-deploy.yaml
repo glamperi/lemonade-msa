@@ -1,0 +1,23 @@
+apiVersion: apps/v1beta1 # apps/v1 # for versions before 1.9.0 use apps/v1beta2
+kind: Deployment
+metadata:
+  name: cup-supply-deployment
+spec:
+  selector:
+    matchLabels:
+      app: cup-supply
+  replicas: 2 # tells deployment to run 2 pods matching the template
+  template: # create pods using pod definition in this template
+    metadata:
+      # unlike pod-nginx.yaml, the name is not included in the meta data as a unique name is
+      # generated from the deployment name
+      labels:
+        app: cup-supply
+    spec:
+      containers:
+      - name: cup-supply
+        image: registry.gitlab.com/lemonade-demo/cup-supply:latest
+        ports:
+        - containerPort: 8080
+      imagePullSecrets:
+      - name: gitlab-reg-auth

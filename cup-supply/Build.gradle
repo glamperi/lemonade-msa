@@ -1,0 +1,57 @@
+project.ext.name = "cup-supply"
+
+buildscript {
+    ext {
+        springBootVersion = '2.1.0.RELEASE'
+    }
+    repositories {
+        mavenCentral()
+        maven { url "https://repo.spring.io/snapshot" }
+        maven { url "https://repo.spring.io/milestone" }
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+apply plugin: 'jacoco'
+
+bootJar {
+    baseName = project.ext.name
+    version =  '0.1.0'
+}
+
+sourceCompatibility = 1.8
+
+// https://docs.gradle.org/current/userguide/publishing_maven.html#publishing_maven:install
+repositories {
+    mavenCentral()
+    maven { url "https://repo.spring.io/snapshot" }
+    maven { url "https://repo.spring.io/milestone" }
+    mavenLocal()
+}
+ 
+test {
+    useJUnitPlatform()
+}
+
+dependencies {
+    compile("org.springframework.boot:spring-boot-starter-web")
+    testCompile('org.springframework.boot:spring-boot-starter-test')  
+    
+    testCompile("org.junit.jupiter:junit-jupiter-api:5.3.1")
+    testRuntime("org.junit.jupiter:junit-jupiter-engine:5.3.1")
+    
+    annotationProcessor group: 'org.projectlombok', name: 'lombok', version: '1.18.6'
+    implementation group: 'org.projectlombok', name: 'lombok', version: '1.18.6'
+    
+    testCompile('org.springframework.boot:spring-boot-starter-test')
+    
+    compile group: 'com.ciber.lemonade', name: 'lemonade-framework', version: '0.3'
+}
+
+

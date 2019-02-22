@@ -1,0 +1,11 @@
+FROM java:8-jdk
+
+RUN mkdir workspace
+
+WORKDIR workspace
+
+ADD ./build/libs/cup-supply-0.1.0.jar app.jar
+
+EXPOSE 8080
+
+CMD java -jar ${ADDITIONAL_OPTS} app.jar

@@ -1,0 +1,83 @@
+# CI Pipeline for Cup supply
+#
+# Uses three stages: one to build (and unit test) and one to create a docker image (package)
+#
+# reference: https://gitlab.com/gitlab-org/gitlab-ci-yml/blob/master/Gradle.gitlab-ci.yml
+# variables https://docs.gitlab.com/ee/ci/variables/
+
+image: java:8-jdk
+
+variables:
+    GRADLE_OPTS: "-Dorg.gradle.daemon=false"
+    
+stages:
+  - build
+  - package
+  - deploy
+
+before_script:
+  - date
+  - export GRADLE_USER_HOME=`pwd`/.gradle
+  
+cache:
+  paths:
+    - .gradle/wrapper
+    - .gradle/caches
+
+build:
+  stage: build
+  script:
+    - echo $CI_PROJECT_NAME $CI_PROJECT_PATH $CI_PROJECT_ID
+    - bash ./gradlew build
+  artifacts:
+    paths:
+      - build/libs/*.jar
+    expire_in: 1 week
+  only:
+    - master
+    
+
+# https://gitlab.com/help/user/project/container_registry.md
+# variables https://docs.gitlab.com/ee/ci/variables/
+
+docker:
+  stage: package
+  image: docker:stable
+  services:
+    - docker:dind
+  script:
+    - date
+    - echo "${CI_REGISTRY_USER}" $CI_REGISTRY
+    - TAG=`echo $CI_COMMIT_SHA | cut -c1-8`
+    - TAG=`date  +%Y%m%d-%H%M%S`
+    - echo $TAG
+    - echo $CI_RUNNER_VERSION $CI_RUNNER_REVISION $CI_RUNNER_EXECUTABLE_ARCH $CI_PIPELINE_SOURCE
+    - echo $CI_PROJECT_NAME $CI_REGISTRY_IMAGE ${CI_REGISTRY_USER} ${CI_REGISTRY}
+    - docker --version
+    - docker build -t ${CI_REGISTRY_IMAGE}:$TAG .
+    - docker build -t ${CI_REGISTRY_IMAGE} .
+    - echo login
+    - echo $CI_BUILD_TOKEN | docker login -u gitlab-ci-token --password-stdin registry.gitlab.com
+    - docker push ${CI_REGISTRY_IMAGE}:$TAG
+    - docker push ${CI_REGISTRY_IMAGE}
+
+# https://blog.cloudhelix.io/using-a-private-docker-registry-with-kubernetes-f8d5f6b8f646
+
+kubernetes:
+  stage: deploy
+  image: google/cloud-sdk:latest
+  script:
+    - kubectl --token $KUBE_TOKEN get nodes
+    - kubectl --token $KUBE_TOKEN get pods
+    - kubectl --token $KUBE_TOKEN get deployments
+    - kubectl --token $KUBE_TOKEN apply  -f k8s/cup-supply-deploy.yaml
+    - sleep 5
+    - kubectl --token $KUBE_TOKEN get pods
+    - kubectl --token $KUBE_TOKEN get deployments
+  environment:
+    name: staging
+    url: https://staging.cibersprint.team
+        
+after_script:
+  - date
+  - echo "End CI"

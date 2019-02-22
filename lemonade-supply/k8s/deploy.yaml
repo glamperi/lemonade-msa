@@ -1,0 +1,24 @@
+apiVersion: apps/v1beta1 # apps/v1 # for versions before 1.9.0 use apps/v1beta2
+kind: Deployment
+metadata:
+  name: lemonade-supply-deployment
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: lemonade-supply
+  replicas: 2 # tells deployment to run 2 pods matching the template
+  template: # create pods using pod definition in this template
+    metadata:
+      # unlike pod-nginx.yaml, the name is not included in the meta data as a unique name is
+      # generated from the deployment name
+      labels:
+        app: lemonade-supply
+    spec:
+      containers:
+      - name: lemonade-supply
+        image: registry.gitlab.com/lemonade-demo/lemonade-supply:latest
+        ports:
+        - containerPort: 8080
+      imagePullSecrets:
+      - name: gitlab-reg-auth
